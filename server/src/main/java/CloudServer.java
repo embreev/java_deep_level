@@ -9,17 +9,24 @@ public class CloudServer {
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         ServerBootstrap b = new ServerBootstrap();
-        b.group(bossGroup, workerGroup)
-                .channel(NioServerSocketChannel.class)
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel ch) throws Exception {
-                        ch.pipeline().addLast((ChannelHandler) new CloudServerHandler());
-                    }
-                })
-                .childOption(ChannelOption.SO_KEEPALIVE, true);
-        ChannelFuture f = b.bind(8189).sync();
-        f.channel().closeFuture().sync();
+        try {
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new AuthHandler(), new DecoderHandler(), new CloudServerHandler());
+                        }
+                    })
+                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+            ChannelFuture f = b.bind(8189).sync();
+            f.channel().closeFuture().sync();
+        }
+        finally {
+            bossGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
+        }
+
     }
 
     public static void main(String[] args) throws Exception {

@@ -24,7 +24,6 @@ public class CloudServerHandler extends ChannelInboundHandlerAdapter {
         finally {
             ReferenceCountUtil.release(msg);
         }
-
     }
 
     @Override
