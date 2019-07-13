@@ -30,7 +30,7 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 //        super.channelRead(ctx, msg);
-        if (isAuth("usr", "pswd")) {
+        if (isAuth("usr1", "pswd")) {
             ctx.fireChannelRead(msg);
         } else {
             ctx.writeAndFlush("Unauthorized!");

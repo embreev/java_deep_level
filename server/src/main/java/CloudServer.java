@@ -15,7 +15,7 @@ public class CloudServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new AuthHandler(), new DecoderHandler(), new CloudServerHandler());
+                            ch.pipeline().addLast(new OutboundHandler(), new AuthHandler(), new DecoderHandler(), new CloudServerHandler());
                         }
                     })
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
