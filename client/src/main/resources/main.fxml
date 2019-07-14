@@ -6,11 +6,23 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox fx:id="rootNode" alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
+<?import javafx.scene.control.Label?>
+<VBox alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
       xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.172-ea" fx:controller="MainController">
-    <HBox>
-        <TextField fx:id="tfFileName" focusTraversable="false" promptText="Укажите имя файла на сервере, который хотите скачать" HBox.hgrow="ALWAYS" />
-        <Button onAction="#pressOnDownloadBtn" text="Скачать" />
+    <HBox HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+        <VBox fx:id="vbClient" HBox.hgrow="ALWAYS">
+            <Label>Client</Label>
+            <ListView fx:id="filesListClient" VBox.vgrow="ALWAYS" />
+        </VBox>
+        <VBox fx:id="vbServer" HBox.hgrow="ALWAYS">
+            <Label>Server</Label>
+            <ListView fx:id="filesListServer" VBox.vgrow="ALWAYS" />
+        </VBox>
     </HBox>
-    <ListView fx:id="filesList" VBox.vgrow="ALWAYS" />
+    <HBox HBox.hgrow="ALWAYS" alignment="CENTER">
+        <Button fx:id="btnCopy" onAction="#pressOnCopyBtn" text="Копировать" />
+        <Button onAction="#pressOnMoveBtn" text="Переместить" />
+        <Button onAction="#pressOnDelBtn" text="Удалить" />
+        <Button onAction="#pressOnRefreshBtn" text="Обновить" />
+    </HBox>
 </VBox>
