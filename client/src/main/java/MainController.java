@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 public class MainController implements Initializable {
 
@@ -23,6 +24,8 @@ public class MainController implements Initializable {
     ListView<String> filesListServer;
 
     boolean focus;
+
+    private final String filesPath = "client/client_storage/";
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -48,16 +51,20 @@ public class MainController implements Initializable {
                     AbstractMessage am = Network.readObject();
                     if (am instanceof FileMessage) {
                         FileMessage fm = (FileMessage) am;
-                        Files.write(Paths.get("client/client_storage/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                        Files.write(Paths.get(filesPath + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                         refreshRemoteFilesList();
                     }
                     if (am instanceof FileRequest) {
                         FileRequest fr = (FileRequest) am;
-                        if (Files.exists(Paths.get("client/client_storage/" + fr.getFilename()))) {
-                            FileMessage fm = new FileMessage(Paths.get("client/client_storage/" + fr.getFilename()));
+                        if (Files.exists(Paths.get(filesPath + fr.getFilename()))) {
+                            FileMessage fm = new FileMessage(Paths.get(filesPath + fr.getFilename()));
                             Network.sendMsg(fm);
                         }
+                    }
+                    if (am instanceof FilesListRequest) {
+                        FilesListRequest flr = (FilesListRequest) am;
+                        fillListServer(flr.getFilesList());
                     }
                 }
             } catch (ClassNotFoundException | IOException e) {
@@ -72,13 +79,20 @@ public class MainController implements Initializable {
         refreshRemoteFilesList();
     }
 
+    private void fillListServer(Set<String> listServer) {
+        for (String s : listServer) {
+            filesListServer.getItems().add(s);
+            System.out.println(s);
+        }
+    }
+
     public void pressOnCopyBtn(ActionEvent actionEvent) {
         if (getFocusClient()) {
             System.out.println("Фокус на клиенте");
             for (Object o : getSelectedItem(filesListClient)) {
                 System.out.println(filesListClient.getItems().get((int) o));
                 try {
-                    Network.sendMsg(new FileMessage(Paths.get("client/client_storage/" + filesListClient.getItems().get((int) o))));
+                    Network.sendMsg(new FileMessage(Paths.get(filesPath + filesListClient.getItems().get((int) o))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -140,7 +154,7 @@ public class MainController implements Initializable {
         updateUI(() -> {
             try {
                 filesListClient.getItems().clear();
-                Files.list(Paths.get("client/client_storage")).map(p -> p.getFileName().toString()).forEach(o -> filesListClient.getItems().add(o));
+                Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).forEach(o -> filesListClient.getItems().add(o));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -149,13 +163,8 @@ public class MainController implements Initializable {
 
     public void refreshRemoteFilesList() {
         updateUI(() -> {
-            try {
-                filesListServer.getItems().clear();
-//                Network.sendMsg(new Command("getFilesList"));
-                Files.list(Paths.get("server/server_storage")).map(p -> p.getFileName().toString()).forEach(o -> filesListServer.getItems().add(o));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            filesListServer.getItems().clear();
+            Network.sendMsg(new Command("list"));
         });
     }
 
