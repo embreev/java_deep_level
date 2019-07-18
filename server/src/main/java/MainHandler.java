@@ -2,6 +2,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -31,6 +32,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                     if (cmd.getCommand().equals("del")) {
                         if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
                             Files.delete(Paths.get(filesPath + cmd.getItemName()));
+                            sendFilesList(ctx);
                         }
                     }
                     if (cmd.getCommand().equals("move")) {
@@ -38,13 +40,10 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                             FileMessage fm = new FileMessage(Paths.get("server/server_storage/" + cmd.getItemName()));
                             ctx.writeAndFlush(fm);
                             Files.delete(Paths.get(filesPath + cmd.getItemName()));
+                            sendFilesList(ctx);
                         }
                     }
-                    if (cmd.getCommand().equals("list")) {
-                        Set<String> listClient = new HashSet();
-                        Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).forEach(o -> listClient.add(o));
-                        FilesListRequest flr = new FilesListRequest(listClient);
-                        ctx.writeAndFlush(flr);
+                    if (cmd.getCommand().equals("list")) {sendFilesList(ctx);
                     }
 
                 }
@@ -52,6 +51,13 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         } finally {
             ReferenceCountUtil.release(msg);
         }
+    }
+
+    private void sendFilesList(ChannelHandlerContext ctx) throws IOException {
+        Set<String> listClient = new HashSet();
+        Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).forEach(o -> listClient.add(o));
+        FilesListRequest flr = new FilesListRequest(listClient);
+        ctx.writeAndFlush(flr);
     }
 
     @Override

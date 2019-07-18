@@ -53,14 +53,6 @@ public class MainController implements Initializable {
                         FileMessage fm = (FileMessage) am;
                         Files.write(Paths.get(filesPath + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
-                        refreshRemoteFilesList();
-                    }
-                    if (am instanceof FileRequest) {
-                        FileRequest fr = (FileRequest) am;
-                        if (Files.exists(Paths.get(filesPath + fr.getFilename()))) {
-                            FileMessage fm = new FileMessage(Paths.get(filesPath + fr.getFilename()));
-                            Network.sendMsg(fm);
-                        }
                     }
                     if (am instanceof FilesListRequest) {
                         FilesListRequest flr = (FilesListRequest) am;
@@ -96,7 +88,6 @@ public class MainController implements Initializable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                refreshRemoteFilesList();
             }
         } else {
             System.out.println("Фокус на сервере");
@@ -118,14 +109,12 @@ public class MainController implements Initializable {
                         e.printStackTrace();
                     }
                     refreshLocalFilesList();
-                    refreshRemoteFilesList();
                 }
             }
         } else {
             System.out.println("Фокус на сервере");
             for (Object o : getSelectedItem(filesListServer)) {
                 Network.sendMsg(new Command("del", filesListServer.getItems().get((int) o)));
-                refreshLocalFilesList();
                 refreshRemoteFilesList();
             }
         }
