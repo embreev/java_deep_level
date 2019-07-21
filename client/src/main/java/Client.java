@@ -4,7 +4,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class MainClient extends Application {
+public class Client extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         FXMLLoader fxmlLoaderAuth = new FXMLLoader(getClass().getResource("/auth.fxml"));
@@ -23,7 +23,7 @@ public class MainClient extends Application {
         primaryStage.show();
     }
 
-    private boolean isAuth(MainClient mainClient) {
+    private boolean isAuth(Client client) {
         return true;
     }
 

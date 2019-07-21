@@ -26,9 +26,9 @@ public class AuthController implements Initializable {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
-                    if (am instanceof FileMessage) {
-                        FileMessage fm = (FileMessage) am;
-                        Files.write(Paths.get("client/client_storage/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                    if (am instanceof FileData) {
+                        FileData fm = (FileData) am;
+                        Files.write(Paths.get("client/client_storage/" + fm.getFileName()), fm.getData(), StandardOpenOption.CREATE);
                     }
                 }
             } catch (ClassNotFoundException | IOException e) {

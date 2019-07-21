@@ -6,6 +6,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import sun.nio.ch.Net;
+import sun.rmi.runtime.NewThreadAction;
 
 import java.io.IOException;
 import java.net.URL;
@@ -15,7 +17,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-public class MainController implements Initializable {
+public class ClientController implements Initializable {
 
     @FXML
     ListView<String> filesListClient;
@@ -26,10 +28,12 @@ public class MainController implements Initializable {
     boolean focus;
 
     private final String filesPath = "client/client_storage/";
+    private Set<String> listServer;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
+
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
         filesListClient.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -38,25 +42,28 @@ public class MainController implements Initializable {
                 focus = true;
             }
         });
+
+        filesListServer.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListServer.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 focus = false;
             }
         });
-        filesListServer.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
         Thread t = new Thread(() -> {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
-                    if (am instanceof FileMessage) {
-                        FileMessage fm = (FileMessage) am;
-                        Files.write(Paths.get(filesPath + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                    if (am instanceof FileData) {
+                        FileData fd = (FileData) am;
+                        Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
-                    if (am instanceof FilesListRequest) {
-                        FilesListRequest flr = (FilesListRequest) am;
-                        fillListServer(flr.getFilesList());
+                    if (am instanceof FilesList) {
+                        FilesList flr = (FilesList) am;
+                        listServer = flr.getFilesList();
+                        refreshRemoteFilesList();
                     }
                 }
             } catch (ClassNotFoundException | IOException e) {
@@ -67,30 +74,23 @@ public class MainController implements Initializable {
         });
         t.setDaemon(true);
         t.start();
-        refreshLocalFilesList();
-        refreshRemoteFilesList();
-    }
 
-    private void fillListServer(Set<String> listServer) {
-        for (String s : listServer) {
-            filesListServer.getItems().add(s);
-            System.out.println(s);
-        }
+        refreshLocalFilesList();
+        Network.sendMsg(new Command("list"));
     }
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {
         if (getFocusClient()) {
-            System.out.println("Фокус на клиенте");
+            System.out.println(filesListClient.getItems());
             for (Object o : getSelectedItem(filesListClient)) {
                 System.out.println(filesListClient.getItems().get((int) o));
                 try {
-                    Network.sendMsg(new FileMessage(Paths.get(filesPath + filesListClient.getItems().get((int) o))));
+                    Network.sendMsg(new FileData(Paths.get(filesPath + filesListClient.getItems().get((int) o))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         } else {
-            System.out.println("Фокус на сервере");
             for (Object o : getSelectedItem(filesListServer)) {
                 Network.sendMsg(new Command("copy", filesListServer.getItems().get((int) o)));
             }
@@ -99,7 +99,6 @@ public class MainController implements Initializable {
 
     public void pressOnDelBtn(ActionEvent actionEvent) {
         if (getFocusClient()) {
-            System.out.println("Фокус на клиенте");
             for (Object o : getSelectedItem(filesListClient)) {
                 String path = "client/client_storage/" + filesListClient.getItems().get((int) o);
                 if (Files.exists(Paths.get(path))) {
@@ -112,10 +111,8 @@ public class MainController implements Initializable {
                 }
             }
         } else {
-            System.out.println("Фокус на сервере");
             for (Object o : getSelectedItem(filesListServer)) {
                 Network.sendMsg(new Command("del", filesListServer.getItems().get((int) o)));
-                refreshRemoteFilesList();
             }
         }
     }
@@ -153,7 +150,10 @@ public class MainController implements Initializable {
     public void refreshRemoteFilesList() {
         updateUI(() -> {
             filesListServer.getItems().clear();
-            Network.sendMsg(new Command("list"));
+            System.out.println(listServer);
+            for (String s : listServer) {
+                filesListServer.getItems().add(s);
+            }
         });
     }
 

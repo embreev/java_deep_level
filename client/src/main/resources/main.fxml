@@ -2,13 +2,12 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <?import javafx.scene.control.Label?>
 <VBox alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
-      xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.172-ea" fx:controller="MainController">
+      xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.172-ea" fx:controller="ClientController">
     <HBox HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
         <VBox fx:id="vbClient" HBox.hgrow="ALWAYS">
             <Label>Client</Label>

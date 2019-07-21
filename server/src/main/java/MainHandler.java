@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class MainHandler extends ChannelInboundHandlerAdapter {
     private final String filesPath = "server/server_storage/";
@@ -16,17 +16,17 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
             while (true) {
-                if (msg instanceof FileMessage) {
-                    FileMessage fm = (FileMessage) msg;
-                    System.out.println("Получил файл - " + fm.getFilename());
-                    Files.write(Paths.get(filesPath + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                if (msg instanceof FileData) {
+                    FileData fd = (FileData) msg;
+                    Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
                 }
                 if (msg instanceof Command) {
                     Command cmd = (Command) msg;
+                    System.out.println(((Command) msg).getCommand());
                     if (cmd.getCommand().equals("copy")) {
                         if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileMessage fm = new FileMessage(Paths.get(filesPath + cmd.getItemName()));
-                            ctx.writeAndFlush(fm);
+                            FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
+                            ctx.writeAndFlush(fd);
                         }
                     }
                     if (cmd.getCommand().equals("del")) {
@@ -37,15 +37,15 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                     }
                     if (cmd.getCommand().equals("move")) {
                         if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileMessage fm = new FileMessage(Paths.get("server/server_storage/" + cmd.getItemName()));
-                            ctx.writeAndFlush(fm);
+                            FileData fd = new FileData(Paths.get("server/server_storage/" + cmd.getItemName()));
+                            ctx.writeAndFlush(fd);
                             Files.delete(Paths.get(filesPath + cmd.getItemName()));
                             sendFilesList(ctx);
                         }
                     }
-                    if (cmd.getCommand().equals("list")) {sendFilesList(ctx);
+                    if (cmd.getCommand().equals("list")) {
+                        sendFilesList(ctx);
                     }
-
                 }
             }
         } finally {
@@ -54,10 +54,9 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendFilesList(ChannelHandlerContext ctx) throws IOException {
-        Set<String> listClient = new HashSet();
-        Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).forEach(o -> listClient.add(o));
-        FilesListRequest flr = new FilesListRequest(listClient);
-        ctx.writeAndFlush(flr);
+        Set<String> listFilesServer = Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).collect(Collectors.toSet());
+        FilesList fl = new FilesList(listFilesServer);
+        ctx.writeAndFlush(fl);
     }
 
     @Override

@@ -2,11 +2,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileMessage extends AbstractMessage {
+public class FileData extends AbstractMessage {
     private String filename;
     private byte[] data;
 
-    public String getFilename() {
+    public String getFileName() {
         return filename;
     }
 
@@ -14,7 +14,7 @@ public class FileMessage extends AbstractMessage {
         return data;
     }
 
-    public FileMessage(Path path) throws IOException {
+    public FileData(Path path) throws IOException {
         filename = path.getFileName().toString();
         data = Files.readAllBytes(path);
     }
