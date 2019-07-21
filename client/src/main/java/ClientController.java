@@ -6,8 +6,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import sun.nio.ch.Net;
-import sun.rmi.runtime.NewThreadAction;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,6 +25,24 @@ public class ClientController implements Initializable {
     @FXML
     ListView<String> filesListServer;
 
+    @FXML
+    TextField tfUsername;
+
+    @FXML
+    TextField tfPassword;
+
+    @FXML
+    VBox authPanel;
+
+    @FXML
+    Label authMessage;
+
+    @FXML
+    HBox clientPanel;
+
+    @FXML
+    HBox serverPanel;
+
     boolean focus;
 
     private final String filesPath = "client/client_storage/";
@@ -33,6 +51,34 @@ public class ClientController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
+
+        Thread tAuth = new Thread(() -> {
+            try {
+                while (true) {
+                    AbstractMessage am = Network.readObject();
+                    if (am instanceof Command) {
+                        Command cmd = (Command) am;
+                        if (cmd.getCommand().equals("authorized")) {
+                            System.out.println("AUTH");
+                            authPanel.setVisible(false);
+                            clientPanel.setVisible(true);
+                            serverPanel.setVisible(true);
+                            break;
+                        }
+                        if (cmd.getCommand().equals("unathorized")) {
+                            authMessage.setText("Incorrect login or password!");
+                            authMessage.setVisible(true);
+                        }
+                    }
+                }
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+            } finally {
+                Network.stop();
+            }
+        });
+        tAuth.setDaemon(true);
+        tAuth.start();
 
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
@@ -51,7 +97,7 @@ public class ClientController implements Initializable {
             }
         });
 
-        Thread t = new Thread(() -> {
+        Thread tMain = new Thread(() -> {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
@@ -72,11 +118,22 @@ public class ClientController implements Initializable {
                 Network.stop();
             }
         });
-        t.setDaemon(true);
-        t.start();
+        tMain.setDaemon(true);
+        tMain.start();
 
         refreshLocalFilesList();
         Network.sendMsg(new Command("list"));
+    }
+
+    public void pressOnAuthBtn(ActionEvent actionEvent) {
+        if (tfUsername.getLength() > 0 && tfPassword.getLength() > 0) {
+            Network.sendMsg(new AuthRequest(tfUsername.getText(), tfPassword.getText()));
+            tfUsername.clear();
+            tfPassword.clear();
+        } else {
+            authMessage.setText("User or Password is empty");
+            authMessage.setVisible(true);
+        }
     }
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {

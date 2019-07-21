@@ -3,16 +3,29 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class AuthHandler extends ChannelInboundHandlerAdapter {
 
-    private String username;
-    private String password;
     private ConnectDB db = new ConnectDB();
 
-    AuthHandler() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         db.connect();
+
+        while (true) {
+            if (msg instanceof AuthRequest) {
+                AuthRequest ar = (AuthRequest) msg;
+                System.out.println(ar.getUsername());
+                if (isAuth(ar.getUsername(), ar.getPassword())) {
+                    ctx.write(new Command("authorized"));
+                    ctx.fireChannelRead(msg);
+                    ctx.flush();
+                    break;
+                } else {
+                    ctx.writeAndFlush(new Command("unauthorized"));
+                }
+            }
+        }
     }
 
     private boolean isAuth (String username, String password) {
@@ -25,17 +38,6 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
             e.printStackTrace();
         }
         return result;
-    }
-
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-//        super.channelRead(ctx, msg);
-        if (isAuth("usr1", "pswd")) {
-            ctx.fireChannelRead(msg);
-        } else {
-            ctx.writeAndFlush("Unauthorized!");
-        }
-
     }
 
     @Override
