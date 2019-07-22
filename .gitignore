@@ -2,3 +2,5 @@
 *.zip
 .idea
 target
+client_storage
+server_storage

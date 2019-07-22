@@ -32,7 +32,7 @@ public class ClientController implements Initializable {
     TextField tfPassword;
 
     @FXML
-    VBox authPanel;
+    HBox authPanel;
 
     @FXML
     Label authMessage;
@@ -51,35 +51,6 @@ public class ClientController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
-
-        Thread tAuth = new Thread(() -> {
-            try {
-                while (true) {
-                    AbstractMessage am = Network.readObject();
-                    if (am instanceof Command) {
-                        Command cmd = (Command) am;
-                        if (cmd.getCommand().equals("authorized")) {
-                            System.out.println("AUTH");
-                            authPanel.setVisible(false);
-                            clientPanel.setVisible(true);
-                            serverPanel.setVisible(true);
-                            break;
-                        }
-                        if (cmd.getCommand().equals("unathorized")) {
-                            authMessage.setText("Incorrect login or password!");
-                            authMessage.setVisible(true);
-                        }
-                    }
-                }
-            } catch (ClassNotFoundException | IOException e) {
-                e.printStackTrace();
-            } finally {
-                Network.stop();
-            }
-        });
-        tAuth.setDaemon(true);
-        tAuth.start();
-
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
         filesListClient.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -101,6 +72,20 @@ public class ClientController implements Initializable {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
+                    if (am instanceof Command) {
+                        Command cmd = (Command) am;
+                        if (cmd.getCommand().equals("authorized")) {
+                            System.out.println("AUTH");
+                            authPanel.setVisible(false);
+                            authMessage.setVisible(false);
+                            clientPanel.setVisible(true);
+                            serverPanel.setVisible(true);
+                        }
+                        if (cmd.getCommand().equals("unauthorized")) {
+                            authMessage.setText("Incorrect login or password!");
+                            authMessage.setVisible(true);
+                        }
+                    }
                     if (am instanceof FileData) {
                         FileData fd = (FileData) am;
                         Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
@@ -130,6 +115,10 @@ public class ClientController implements Initializable {
             Network.sendMsg(new AuthRequest(tfUsername.getText(), tfPassword.getText()));
             tfUsername.clear();
             tfPassword.clear();
+            authPanel.setVisible(false);
+            authMessage.setVisible(false);
+            clientPanel.setVisible(true);
+            serverPanel.setVisible(true);
         } else {
             authMessage.setText("User or Password is empty");
             authMessage.setVisible(true);
