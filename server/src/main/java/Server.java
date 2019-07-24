@@ -8,6 +8,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class Server {
+    private ConnectDB db = new ConnectDB();
+
     public void run() throws Exception {
         EventLoopGroup mainGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -25,6 +27,7 @@ public class Server {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
             ChannelFuture future = b.bind(8089).sync();
             future.channel().closeFuture().sync();
+            db.connect();
         } finally {
             mainGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

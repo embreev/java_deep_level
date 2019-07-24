@@ -107,7 +107,7 @@ public class ClientController implements Initializable {
         tMain.start();
 
         refreshLocalFilesList();
-        Network.sendMsg(new Command("list"));
+//        Network.sendMsg(new Command("list"));
     }
 
     public void pressOnAuthBtn(ActionEvent actionEvent) {
@@ -115,10 +115,6 @@ public class ClientController implements Initializable {
             Network.sendMsg(new AuthRequest(tfUsername.getText(), tfPassword.getText()));
             tfUsername.clear();
             tfPassword.clear();
-            authPanel.setVisible(false);
-            authMessage.setVisible(false);
-            clientPanel.setVisible(true);
-            serverPanel.setVisible(true);
         } else {
             authMessage.setText("User or Password is empty");
             authMessage.setVisible(true);

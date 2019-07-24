@@ -9,11 +9,11 @@
 <?import javafx.scene.control.TextField?>
 <VBox alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
       xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.172-ea" fx:controller="ClientController">
-    <Label fx:id="authMessage" visible="false"></Label>
-    <HBox fx:id="authPanel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" visible="true">
-        <TextField fx:id="tfUsername" promptText="Имя пользователя" />
-        <TextField fx:id="tfPassword" promptText="Пароль" />
-        <Button onAction="#pressOnAuthBtn" text="Авторизоваться" HBox.hgrow="ALWAYS" />
+    <Label fx:id="authMessage" minHeight="25" visible="false"></Label>
+    <HBox fx:id="authPanel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" managed="true">
+        <TextField fx:id="tfUsername" onAction="#pressOnAuthBtn" minWidth="133" promptText="Имя пользователя"  />
+        <TextField fx:id="tfPassword" onAction="#pressOnAuthBtn" minWidth="133" promptText="Пароль" />
+        <Button onAction="#pressOnAuthBtn" minWidth="133" text="Авторизоваться" />
     </HBox>
     <HBox fx:id="clientPanel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" visible="false">
         <VBox fx:id="vbClient" HBox.hgrow="ALWAYS">

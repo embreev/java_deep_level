@@ -19,53 +19,56 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        db.connect();
+        AuthRequest authRequest = (AuthRequest) msg;
+        System.out.println(authRequest.getUsername());
         try {
-            while (true) {
-                System.out.println(msg);
-                if (msg instanceof AuthRequest) {
-                    AuthRequest ar = (AuthRequest) msg;
-                    System.out.println(ar.getUsername());
-                    if (!accessList.contains(ar.getUsername())) {
-                        if (isAuth(ar.getUsername(), ar.getPassword())) {
-                            accessList.add(ar.getUsername());
-                            ctx.writeAndFlush(new Command("authorized"));
-                            break;
-                        } else {
-                            ctx.writeAndFlush(new Command("unauthorized"));
-                        }
+            if (msg instanceof AuthRequest) {
+                AuthRequest ar = (AuthRequest) msg;
+                System.out.println(ar.getUsername());
+                if (isAuth(ar.getUsername(), ar.getPassword())) {
+                    accessList.add(ar.getUsername());
+                    ctx.writeAndFlush(new Command("authorized"));
+                } else {
+                    ctx.writeAndFlush(new Command("unauthorized"));
+                }
+//                if (!accessList.contains(ar.getUsername())) {
+//                    if (isAuth(ar.getUsername(), ar.getPassword())) {
+//                        accessList.add(ar.getUsername());
+//                        ctx.writeAndFlush(new Command("authorized"));
+//                    } else {
+//                        ctx.writeAndFlush(new Command("unauthorized"));
+//                    }
+//                }
+            }
+            if (msg instanceof FileData) {
+                FileData fd = (FileData) msg;
+                Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
+            }
+            if (msg instanceof Command) {
+                Command cmd = (Command) msg;
+                System.out.println(((Command) msg).getCommand());
+                if (cmd.getCommand().equals("copy")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
+                        ctx.writeAndFlush(fd);
                     }
                 }
-                if (msg instanceof FileData) {
-                    FileData fd = (FileData) msg;
-                    Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
-                }
-                if (msg instanceof Command) {
-                    Command cmd = (Command) msg;
-                    System.out.println(((Command) msg).getCommand());
-                    if (cmd.getCommand().equals("copy")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
-                            ctx.writeAndFlush(fd);
-                        }
-                    }
-                    if (cmd.getCommand().equals("del")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            Files.delete(Paths.get(filesPath + cmd.getItemName()));
-                            sendFilesList(ctx);
-                        }
-                    }
-                    if (cmd.getCommand().equals("move")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileData fd = new FileData(Paths.get("server/server_storage/" + cmd.getItemName()));
-                            ctx.writeAndFlush(fd);
-                            Files.delete(Paths.get(filesPath + cmd.getItemName()));
-                            sendFilesList(ctx);
-                        }
-                    }
-                    if (cmd.getCommand().equals("list")) {
+                if (cmd.getCommand().equals("del")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        Files.delete(Paths.get(filesPath + cmd.getItemName()));
                         sendFilesList(ctx);
                     }
+                }
+                if (cmd.getCommand().equals("move")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        FileData fd = new FileData(Paths.get("server/server_storage/" + cmd.getItemName()));
+                        ctx.writeAndFlush(fd);
+                        Files.delete(Paths.get(filesPath + cmd.getItemName()));
+                        sendFilesList(ctx);
+                    }
+                }
+                if (cmd.getCommand().equals("list")) {
+                    sendFilesList(ctx);
                 }
             }
         } finally {
