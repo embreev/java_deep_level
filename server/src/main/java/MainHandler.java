@@ -19,13 +19,11 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        AuthRequest authRequest = (AuthRequest) msg;
-        System.out.println(authRequest.getUsername());
         try {
             if (msg instanceof AuthRequest) {
                 AuthRequest ar = (AuthRequest) msg;
-                System.out.println(ar.getUsername());
                 if (isAuth(ar.getUsername(), ar.getPassword())) {
+                    System.out.println("User is authorized");
                     accessList.add(ar.getUsername());
                     ctx.writeAndFlush(new Command("authorized"));
                 } else {
@@ -41,6 +39,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 //                }
             }
             if (msg instanceof FileData) {
+                System.out.println("received file");
                 FileData fd = (FileData) msg;
                 Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
             }
@@ -68,6 +67,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                     }
                 }
                 if (cmd.getCommand().equals("list")) {
+                    System.out.println("send fileslist");
                     sendFilesList(ctx);
                 }
             }

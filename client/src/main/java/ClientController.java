@@ -7,7 +7,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.URL;
@@ -43,7 +42,7 @@ public class ClientController implements Initializable {
     @FXML
     HBox serverPanel;
 
-    boolean focus;
+    private boolean focus;
 
     private final String filesPath = "client/client_storage/";
     private Set<String> listServer;
@@ -51,6 +50,8 @@ public class ClientController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
+        Network.sendMsg(new Command("list"));
+
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
         filesListClient.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -72,6 +73,7 @@ public class ClientController implements Initializable {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
+                    System.out.println(am.getClass());
                     if (am instanceof Command) {
                         Command cmd = (Command) am;
                         if (cmd.getCommand().equals("authorized")) {
@@ -87,11 +89,13 @@ public class ClientController implements Initializable {
                         }
                     }
                     if (am instanceof FileData) {
+                        System.out.println("received file");
                         FileData fd = (FileData) am;
                         Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
                     if (am instanceof FilesList) {
+                        System.out.println("received fileslist");
                         FilesList flr = (FilesList) am;
                         listServer = flr.getFilesList();
                         refreshRemoteFilesList();
@@ -100,6 +104,7 @@ public class ClientController implements Initializable {
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             } finally {
+                System.out.println("network stop");
                 Network.stop();
             }
         });
@@ -107,7 +112,6 @@ public class ClientController implements Initializable {
         tMain.start();
 
         refreshLocalFilesList();
-//        Network.sendMsg(new Command("list"));
     }
 
     public void pressOnAuthBtn(ActionEvent actionEvent) {
@@ -164,11 +168,6 @@ public class ClientController implements Initializable {
         pressOnDelBtn(actionEvent);
     }
 
-    public void pressOnRefreshBtn(ActionEvent actionEvent) {
-        refreshLocalFilesList();
-        refreshRemoteFilesList();
-    }
-
     private ObservableList getSelectedItem(ListView<String> lv) {
         ObservableList selectedIndices = lv.getSelectionModel().getSelectedIndices();
         return selectedIndices;
@@ -192,7 +191,6 @@ public class ClientController implements Initializable {
     public void refreshRemoteFilesList() {
         updateUI(() -> {
             filesListServer.getItems().clear();
-            System.out.println(listServer);
             for (String s : listServer) {
                 filesListServer.getItems().add(s);
             }

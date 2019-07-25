@@ -29,6 +29,5 @@
         <Button fx:id="btnCopy" onAction="#pressOnCopyBtn" text="Копировать" />
         <Button onAction="#pressOnMoveBtn" text="Переместить" />
         <Button onAction="#pressOnDelBtn" text="Удалить" />
-        <Button onAction="#pressOnRefreshBtn" text="Обновить" />
     </HBox>
 </VBox>
