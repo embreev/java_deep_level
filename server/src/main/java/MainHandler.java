@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,15 +18,17 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            if (msg instanceof AuthRequest) {
-                AuthRequest ar = (AuthRequest) msg;
-                if (isAuth(ar.getUsername(), ar.getPassword())) {
-                    System.out.println("User is authorized");
-                    accessList.add(ar.getUsername());
-                    ctx.writeAndFlush(new Command("authorized"));
-                } else {
-                    ctx.writeAndFlush(new Command("unauthorized"));
-                }
+//            if (msg instanceof AuthRequest) {
+//                System.out.println("authorization");
+//                AuthRequest ar = (AuthRequest) msg;
+//                if (isAuth(ar.getUsername(), ar.getPassword())) {
+//                    System.out.println("User is authorized");
+//                    accessList.add(ar.getUsername());
+//                    ctx.writeAndFlush(new Command("authorized"));
+//                    sendFilesList(ctx);
+//                } else {
+//                    ctx.writeAndFlush(new Command("unauthorized"));
+//                }
 //                if (!accessList.contains(ar.getUsername())) {
 //                    if (isAuth(ar.getUsername(), ar.getPassword())) {
 //                        accessList.add(ar.getUsername());
@@ -37,15 +37,13 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 //                        ctx.writeAndFlush(new Command("unauthorized"));
 //                    }
 //                }
-            }
+//            }
             if (msg instanceof FileData) {
-                System.out.println("received file");
                 FileData fd = (FileData) msg;
                 Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
             }
             if (msg instanceof Command) {
                 Command cmd = (Command) msg;
-                System.out.println(((Command) msg).getCommand());
                 if (cmd.getCommand().equals("copy")) {
                     if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
                         FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
@@ -67,7 +65,6 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                     }
                 }
                 if (cmd.getCommand().equals("list")) {
-                    System.out.println("send fileslist");
                     sendFilesList(ctx);
                 }
             }
@@ -76,20 +73,21 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private boolean isAuth (String username, String password) {
-        boolean result = false;
-        String sql = String.format("SELECT * FROM users WHERE username = '%s' AND password = '%s'", username, password);
-        try {
-            ResultSet resultSet = db.stmt.executeQuery(sql);
-            result = resultSet.next();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
+//    private boolean isAuth (String username, String password) {
+//        boolean result = false;
+//        String sql = String.format("SELECT * FROM users WHERE username = '%s' AND password = '%s'", username, password);
+//        try {
+//            ResultSet resultSet = db.stmt.executeQuery(sql);
+//            result = resultSet.next();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return result;
+//    }
 
     private void sendFilesList(ChannelHandlerContext ctx) throws IOException {
         Set<String> listFilesServer = Files.list(Paths.get(filesPath)).map(p -> p.getFileName().toString()).collect(Collectors.toSet());
+        System.out.println(listFilesServer);
         FilesList fl = new FilesList(listFilesServer);
         ctx.writeAndFlush(fl);
     }

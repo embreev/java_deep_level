@@ -7,6 +7,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import sun.nio.ch.Net;
 
 import java.io.IOException;
 import java.net.URL;
@@ -45,6 +46,7 @@ public class ClientController implements Initializable {
     private boolean focus;
 
     private final String filesPath = "client/client_storage/";
+    private final String filesPathServer = "server/server_storage/";
     private Set<String> listServer;
 
     @Override
@@ -73,29 +75,27 @@ public class ClientController implements Initializable {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
-                    System.out.println(am.getClass());
-                    if (am instanceof Command) {
-                        Command cmd = (Command) am;
-                        if (cmd.getCommand().equals("authorized")) {
-                            System.out.println("AUTH");
-                            authPanel.setVisible(false);
-                            authMessage.setVisible(false);
-                            clientPanel.setVisible(true);
-                            serverPanel.setVisible(true);
-                        }
-                        if (cmd.getCommand().equals("unauthorized")) {
-                            authMessage.setText("Incorrect login or password!");
-                            authMessage.setVisible(true);
-                        }
-                    }
+//                    System.out.println(am.getClass());
+//                    if (am instanceof Command) {
+//                        Command cmd = (Command) am;
+//                        if (cmd.getCommand().equals("authorized")) {
+//                            System.out.println("AUTH");
+//                            authPanel.setVisible(false);
+//                            authMessage.setVisible(false);
+//                            clientPanel.setVisible(true);
+//                            serverPanel.setVisible(true);
+//                        }
+//                        if (cmd.getCommand().equals("unauthorized")) {
+//                            authMessage.setText("Incorrect login or password!");
+//                            authMessage.setVisible(true);
+//                        }
+//                    }
                     if (am instanceof FileData) {
-                        System.out.println("received file");
                         FileData fd = (FileData) am;
                         Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
                     if (am instanceof FilesList) {
-                        System.out.println("received fileslist");
                         FilesList flr = (FilesList) am;
                         listServer = flr.getFilesList();
                         refreshRemoteFilesList();
@@ -104,7 +104,6 @@ public class ClientController implements Initializable {
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             } finally {
-                System.out.println("network stop");
                 Network.stop();
             }
         });
@@ -112,24 +111,24 @@ public class ClientController implements Initializable {
         tMain.start();
 
         refreshLocalFilesList();
+        refreshRemoteFilesList();
     }
 
-    public void pressOnAuthBtn(ActionEvent actionEvent) {
-        if (tfUsername.getLength() > 0 && tfPassword.getLength() > 0) {
-            Network.sendMsg(new AuthRequest(tfUsername.getText(), tfPassword.getText()));
-            tfUsername.clear();
-            tfPassword.clear();
-        } else {
-            authMessage.setText("User or Password is empty");
-            authMessage.setVisible(true);
-        }
-    }
+//    public void pressOnAuthBtn(ActionEvent actionEvent) {
+//        if (tfUsername.getLength() > 0 && tfPassword.getLength() > 0) {
+////            Network.sendMsg(new AuthRequest(tfUsername.getText(), tfPassword.getText()));
+//            Network.sendMsg(new Command("list"));
+//            tfUsername.clear();
+//            tfPassword.clear();
+//        } else {
+//            authMessage.setText("User or Password is empty");
+//            authMessage.setVisible(true);
+//        }
+//    }
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {
         if (getFocusClient()) {
-            System.out.println(filesListClient.getItems());
             for (Object o : getSelectedItem(filesListClient)) {
-                System.out.println(filesListClient.getItems().get((int) o));
                 try {
                     Network.sendMsg(new FileData(Paths.get(filesPath + filesListClient.getItems().get((int) o))));
                 } catch (IOException e) {
@@ -190,10 +189,16 @@ public class ClientController implements Initializable {
 
     public void refreshRemoteFilesList() {
         updateUI(() -> {
-            filesListServer.getItems().clear();
-            for (String s : listServer) {
-                filesListServer.getItems().add(s);
+            try {
+                filesListServer.getItems().clear();
+                Files.list(Paths.get(filesPathServer)).map(p -> p.getFileName().toString()).forEach(o -> filesListServer.getItems().add(o));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+//            filesListServer.getItems().clear();
+//            for (String s : listServer) {
+//                filesListServer.getItems().add(s);
+//            }
         });
     }
 
