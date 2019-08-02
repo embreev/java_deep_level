@@ -15,37 +15,35 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
-            while (true) {
-                if (msg instanceof FileData) {
-                    FileData fd = (FileData) msg;
-                    Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
+            if (msg instanceof FileData) {
+                FileData fd = (FileData) msg;
+                Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
+            }
+            if (msg instanceof Command) {
+                Command cmd = (Command) msg;
+                System.out.println(((Command) msg).getCommand());
+                if (cmd.getCommand().equals("copy")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
+                        ctx.writeAndFlush(fd);
+                    }
                 }
-                if (msg instanceof Command) {
-                    Command cmd = (Command) msg;
-                    System.out.println(((Command) msg).getCommand());
-                    if (cmd.getCommand().equals("copy")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
-                            ctx.writeAndFlush(fd);
-                        }
-                    }
-                    if (cmd.getCommand().equals("del")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            Files.delete(Paths.get(filesPath + cmd.getItemName()));
-                            sendFilesList(ctx);
-                        }
-                    }
-                    if (cmd.getCommand().equals("move")) {
-                        if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
-                            FileData fd = new FileData(Paths.get("server/server_storage/" + cmd.getItemName()));
-                            ctx.writeAndFlush(fd);
-                            Files.delete(Paths.get(filesPath + cmd.getItemName()));
-                            sendFilesList(ctx);
-                        }
-                    }
-                    if (cmd.getCommand().equals("list")) {
+                if (cmd.getCommand().equals("del")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        Files.delete(Paths.get(filesPath + cmd.getItemName()));
                         sendFilesList(ctx);
                     }
+                }
+                if (cmd.getCommand().equals("move")) {
+                    if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
+                        FileData fd = new FileData(Paths.get("server/server_storage/" + cmd.getItemName()));
+                        ctx.writeAndFlush(fd);
+                        Files.delete(Paths.get(filesPath + cmd.getItemName()));
+                        sendFilesList(ctx);
+                    }
+                }
+                if (cmd.getCommand().equals("list")) {
+                    sendFilesList(ctx);
                 }
             }
         } finally {
