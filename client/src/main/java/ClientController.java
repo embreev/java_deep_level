@@ -81,11 +81,10 @@ public class ClientController implements Initializable {
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {
         if (getFocusClient()) {
-            System.out.println(filesListClient.getItems());
             for (Object o : getSelectedItem(filesListClient)) {
-                System.out.println(filesListClient.getItems().get((int) o));
                 try {
                     Network.sendMsg(new FileData(Paths.get(filesPath + filesListClient.getItems().get((int) o))));
+                    Network.sendMsg(new Command("list"));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -122,11 +121,6 @@ public class ClientController implements Initializable {
         pressOnDelBtn(actionEvent);
     }
 
-    public void pressOnRefreshBtn(ActionEvent actionEvent) {
-        refreshLocalFilesList();
-        refreshRemoteFilesList();
-    }
-
     private ObservableList getSelectedItem(ListView<String> lv) {
         ObservableList selectedIndices = lv.getSelectionModel().getSelectedIndices();
         return selectedIndices;
@@ -150,7 +144,6 @@ public class ClientController implements Initializable {
     public void refreshRemoteFilesList() {
         updateUI(() -> {
             filesListServer.getItems().clear();
-            System.out.println(listServer);
             for (String s : listServer) {
                 filesListServer.getItems().add(s);
             }

@@ -21,7 +21,6 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
             }
             if (msg instanceof Command) {
                 Command cmd = (Command) msg;
-                System.out.println(((Command) msg).getCommand());
                 if (cmd.getCommand().equals("copy")) {
                     if (Files.exists(Paths.get(filesPath + cmd.getItemName()))) {
                         FileData fd = new FileData(Paths.get(filesPath + cmd.getItemName()));
