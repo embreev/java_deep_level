@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<VBox alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
+      xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.172-ea" fx:controller="ClientController">
+<!--    <Label fx:id="authMessage" minHeight="25" visible="false"></Label>-->
+<!--    <HBox fx:id="authPanel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" managed="true">-->
+<!--        <TextField fx:id="tfUsername" onAction="#pressOnAuthBtn" minWidth="133" promptText="Имя пользователя"  />-->
+<!--        <TextField fx:id="tfPassword" onAction="#pressOnAuthBtn" minWidth="133" promptText="Пароль" />-->
+<!--        <Button onAction="#pressOnAuthBtn" minWidth="133" text="Авторизоваться" />-->
+<!--    </HBox>-->
+    <HBox fx:id="clientPanel" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" visible="true">
+        <VBox fx:id="vbClient" HBox.hgrow="ALWAYS">
+            <Label>Client</Label>
+            <ListView fx:id="filesListClient" VBox.vgrow="ALWAYS" />
+        </VBox>
+        <VBox fx:id="vbServer" HBox.hgrow="ALWAYS">
+            <Label>Server</Label>
+            <ListView fx:id="filesListServer" VBox.vgrow="ALWAYS" />
+        </VBox>
+    </HBox>
+    <HBox fx:id="serverPanel" HBox.hgrow="ALWAYS" alignment="CENTER" visible="true">
+        <Button fx:id="btnCopy" onAction="#pressOnCopyBtn" text="Копировать" />
+        <Button onAction="#pressOnMoveBtn" text="Переместить" />
+        <Button onAction="#pressOnDelBtn" text="Удалить" />
+    </HBox>
+</VBox>
