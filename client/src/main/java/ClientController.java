@@ -48,27 +48,6 @@ public class ClientController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
 
-//        while (true) {
-//            try {
-//                AbstractMessage am = Network.readObject();
-//                Command authAnswer = (Command) am;
-//                if (authAnswer.getCommand().equals("auth_ok")) {
-//                    hbAuth.setVisible(false);
-//                    hbFilesList.setVisible(true);
-//                    hbManagePanel.setVisible(true);
-//                    break;
-//                }
-//                if (authAnswer.getCommand().equals("auth_err")) {
-//                    clearAuthField();
-//                    continue;
-//                }
-//            } catch (ClassNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
         filesListClient.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -93,6 +72,7 @@ public class ClientController implements Initializable {
                     if (am instanceof Command) {
                         Command authAnswer = (Command) am;
                         if (authAnswer.getCommand().equals("auth_ok")) {
+                            clearAuthField();
                             hbAuth.setVisible(false);
                             hbFilesList.setVisible(true);
                             hbManagePanel.setVisible(true);
