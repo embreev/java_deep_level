@@ -6,8 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import sun.nio.ch.Net;
-import sun.rmi.runtime.NewThreadAction;
+import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +17,21 @@ import java.util.ResourceBundle;
 import java.util.Set;
 
 public class ClientController implements Initializable {
+
+    @FXML
+    TextField tfLogin;
+
+    @FXML
+    PasswordField pfPassword;
+
+    @FXML
+    HBox hbAuth;
+
+    @FXML
+    HBox hbFilesList;
+
+    @FXML
+    HBox hbManagePanel;
 
     @FXML
     ListView<String> filesListClient;
@@ -33,6 +47,27 @@ public class ClientController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         Network.start();
+
+//        while (true) {
+//            try {
+//                AbstractMessage am = Network.readObject();
+//                Command authAnswer = (Command) am;
+//                if (authAnswer.getCommand().equals("auth_ok")) {
+//                    hbAuth.setVisible(false);
+//                    hbFilesList.setVisible(true);
+//                    hbManagePanel.setVisible(true);
+//                    break;
+//                }
+//                if (authAnswer.getCommand().equals("auth_err")) {
+//                    clearAuthField();
+//                    continue;
+//                }
+//            } catch (ClassNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
         filesListClient.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         filesListClient.requestFocus();
@@ -55,6 +90,18 @@ public class ClientController implements Initializable {
             try {
                 while (true) {
                     AbstractMessage am = Network.readObject();
+                    if (am instanceof Command) {
+                        Command authAnswer = (Command) am;
+                        if (authAnswer.getCommand().equals("auth_ok")) {
+                            hbAuth.setVisible(false);
+                            hbFilesList.setVisible(true);
+                            hbManagePanel.setVisible(true);
+                        }
+                        if (authAnswer.getCommand().equals("auth_err")) {
+                            clearAuthField();
+                            continue;
+                        }
+                    }
                     if (am instanceof FileData) {
                         FileData fd = (FileData) am;
                         Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);
@@ -77,6 +124,17 @@ public class ClientController implements Initializable {
 
         refreshLocalFilesList();
         Network.sendMsg(new Command("list"));
+    }
+
+    public void pressOnAuthBtn(ActionEvent actionEvent) {
+        System.out.println(tfLogin.getText() + " " + pfPassword.getText());
+        Network.sendMsg(new AuthRequest(tfLogin.getText(), pfPassword.getText()));
+        clearAuthField();
+    }
+
+    public void clearAuthField() {
+        tfLogin.clear();
+        pfPassword.clear();
     }
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {

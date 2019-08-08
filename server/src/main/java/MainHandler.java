@@ -15,6 +15,14 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
+            if (msg instanceof AuthRequest) {
+                AuthRequest ar = (AuthRequest) msg;
+                if (ar.getUserLogin().equals("user1") && ar.getUserPassword().equals("pass1")) {
+                    ctx.writeAndFlush(new Command("auth_ok"));
+                } else {
+                    ctx.writeAndFlush(new Command("auth_err"));
+                }
+            }
             if (msg instanceof FileData) {
                 FileData fd = (FileData) msg;
                 Files.write(Paths.get(filesPath + fd.getFileName()), fd.getData(), StandardOpenOption.CREATE);

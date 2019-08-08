@@ -15,10 +15,6 @@ public class Client extends Application {
         primaryStage.show();
     }
 
-    private boolean isAuth(Client client) {
-        return true;
-    }
-
     public static void main(String[] args) {
         launch(args);
     }
