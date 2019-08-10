@@ -15,6 +15,12 @@ public class Client extends Application {
         primaryStage.show();
     }
 
+    @Override
+    public void stop() throws Exception {
+        Network.sendMsg(new Command("disconnect"));
+        super.stop();
+    }
+
     public static void main(String[] args) {
         launch(args);
     }

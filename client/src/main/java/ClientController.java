@@ -7,6 +7,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.io.IOException;
 import java.net.URL;
@@ -19,13 +20,16 @@ import java.util.Set;
 public class ClientController implements Initializable {
 
     @FXML
+    Label lMsg;
+
+    @FXML
     TextField tfLogin;
 
     @FXML
     PasswordField pfPassword;
 
     @FXML
-    HBox hbAuth;
+    VBox vbAuth;
 
     @FXML
     HBox hbFilesList;
@@ -39,8 +43,8 @@ public class ClientController implements Initializable {
     @FXML
     ListView<String> filesListServer;
 
-    boolean focus;
-
+    private boolean focus;
+    private String clientLogin;
     private final String filesPath = "client/client_storage/";
     private Set<String> listServer;
 
@@ -72,12 +76,20 @@ public class ClientController implements Initializable {
                     if (am instanceof Command) {
                         Command authAnswer = (Command) am;
                         if (authAnswer.getCommand().equals("auth_ok")) {
+                            refreshLabel("Пользователь " + clientLogin + " авторизован!");
                             clearAuthField();
-                            hbAuth.setVisible(false);
+                            vbAuth.setManaged(false);
+                            vbAuth.setVisible(false);
                             hbFilesList.setVisible(true);
                             hbManagePanel.setVisible(true);
                         }
                         if (authAnswer.getCommand().equals("auth_err")) {
+                            refreshLabel("Неверный логин или пароль!");
+                            clearAuthField();
+                            continue;
+                        }
+                        if (authAnswer.getCommand().equals("auth_duplicate")) {
+                            refreshLabel("Пользователь " + clientLogin + " уже авторизован!");
                             clearAuthField();
                             continue;
                         }
@@ -108,13 +120,15 @@ public class ClientController implements Initializable {
 
     public void pressOnAuthBtn(ActionEvent actionEvent) {
         System.out.println(tfLogin.getText() + " " + pfPassword.getText());
-        Network.sendMsg(new AuthRequest(tfLogin.getText(), pfPassword.getText()));
+        clientLogin = tfLogin.getText();
+        Network.sendMsg(new AuthRequest(clientLogin, pfPassword.getText()));
         clearAuthField();
     }
 
     public void clearAuthField() {
         tfLogin.clear();
         pfPassword.clear();
+        tfLogin.requestFocus();
     }
 
     public void pressOnCopyBtn(ActionEvent actionEvent) {
@@ -166,6 +180,12 @@ public class ClientController implements Initializable {
 
     private boolean getFocusClient() {
         return focus;
+    }
+
+    public void refreshLabel(String msg) {
+        updateUI(() -> {
+            lMsg.setText(msg);
+        });
     }
 
     public void refreshLocalFilesList() {
